@@ -1,0 +1,1 @@
+Let me check the current Home.jsx first.Good. Now I have everything. Let me build both files with logout + history panel + a clean top bar.
