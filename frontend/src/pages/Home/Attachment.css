@@ -1,0 +1,484 @@
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ATTACHMENTS & INPUT STYLING - Complete CSS File                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* FILE INPUT - Hidden */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+input[type="file"] {
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* INPUT ROW - Main Container */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.input-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 0;
+  padding: 0;
+  background: white;
+  border-top: 1px solid #e5e1d8;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* PENDING ATTACHMENTS - Staging Area */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.pending-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 12px 0 12px;
+  border-bottom: 1px solid #e5e1d8;
+  background: white;
+  max-height: 150px;
+  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+/* Individual attachment chip in staging area */
+.pending-attachment-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #f5f3f0;
+  border: 1px solid #d4c4b0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #3b4a35;
+  max-width: 280px;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.pending-attachment-chip:hover {
+  border-color: #c4b4a0;
+  background: #faf8f6;
+}
+
+/* Chip content - icon + name */
+.chip-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.chip-content svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+/* Chip filename */
+.chip-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  font-weight: 500;
+  color: #3b4a35;
+}
+
+/* Remove button on chip */
+.chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #9c9a96;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.chip-remove:hover {
+  color: #3b4a35;
+  background: #e5ddd0;
+}
+
+.chip-remove:active {
+  background: #d4c4b0;
+}
+
+.chip-remove svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* CONTROLS ROW - Buttons + Textarea */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.input-row > .attach-btn {
+  grid-column: 1;
+  grid-row: 2;
+  padding: 12px 8px 12px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border: none;
+  background: none;
+}
+
+.input-row > .input-field {
+  grid-column: 2;
+  grid-row: 2;
+  padding: 12px 8px;
+  display: flex;
+  align-items: flex-end;
+  margin: 0;
+  border: none;
+  background: none;
+}
+
+.input-row > .send-btn {
+  grid-column: 3;
+  grid-row: 2;
+  padding: 12px 12px 12px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border: none;
+  background: none;
+}
+
+/* Attach button */
+.attach-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  cursor: pointer;
+  border-radius: 8px;
+  color: #7a9870;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.attach-btn:hover:not(:disabled) {
+  background: #f0f4ed;
+}
+
+.attach-btn:active:not(:disabled) {
+  background: #e8efdf;
+}
+
+.attach-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.attach-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Textarea */
+.input-field {
+  flex: 1;
+  min-height: 40px;
+  max-height: 140px;
+  padding: 12px 8px !important;
+  border: none;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #3b4a35;
+  resize: none;
+  line-height: 1.4;
+  background: transparent;
+  outline: none;
+  overflow-y: auto;
+}
+
+.input-field::placeholder {
+  color: #b0aca4;
+}
+
+/* Send button */
+.send-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  cursor: pointer;
+  border-radius: 8px;
+  background: #7a9870;
+  color: white;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.send-btn:hover:not(:disabled) {
+  background: #6d8961;
+}
+
+.send-btn:active:not(:disabled) {
+  background: #5f7a52;
+}
+
+.send-btn:disabled {
+  background: #b0aca4;
+  cursor: not-allowed;
+}
+
+.send-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* ATTACHMENT CARDS - In Messages */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.attachment-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+/* Single attachment card */
+.att-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f9f7f5;
+  border: 1px solid #e5e1d8;
+  border-radius: 8px;
+  max-width: 320px;
+  transition: all 0.2s ease;
+}
+
+.att-card:hover {
+  background: #faf8f6;
+  border-color: #d4c4b0;
+}
+
+/* Card states */
+.att-card--uploading {
+  opacity: 0.75;
+}
+
+.att-card--ready {
+  border-color: #b8d4b5;
+  background: #f0f4ed;
+}
+
+.att-card--ready:hover {
+  background: #eef2ea;
+}
+
+.att-card--failed {
+  border-color: #d4b8b8;
+  background: #f4f0f0;
+}
+
+.att-card--failed:hover {
+  background: #f5f1f1;
+}
+
+/* File type icon */
+.att-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: #7a9870;
+}
+
+.att-card--failed .att-icon {
+  color: #a87c7c;
+}
+
+/* Card info section */
+.att-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Filename */
+.att-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #3b4a35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* File size */
+.att-meta {
+  font-size: 11px;
+  color: #9c9a96;
+}
+
+/* Status badge */
+.att-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  color: #7a9870;
+}
+
+.att-status--uploading {
+  color: #a89965;
+  background: rgba(168, 153, 101, 0.1);
+}
+
+.att-status--ready {
+  color: #7a9870;
+  background: rgba(122, 152, 112, 0.1);
+}
+
+.att-status--failed {
+  color: #a87c7c;
+  background: rgba(168, 124, 124, 0.1);
+}
+
+/* Spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.att-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* MESSAGES - Attachment Display */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+/* Message with only attachments */
+.message--attachments {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.message--attachments .attachment-cards {
+  flex: 0 1 auto;
+}
+
+/* Message with attachments + text combined */
+.message--attachments-text {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.message--attachments-text > :not(.msg-avatar) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.message--attachments-text .attachment-cards {
+  margin-bottom: 0;
+}
+
+.message--attachments-text .msg-bubble {
+  margin-bottom: 0;
+  margin-top: 4px;
+}
+
+.message--attachments-text .msg-avatar {
+  align-self: flex-end;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* RESPONSIVE - Mobile */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .pending-attachment-chip {
+    max-width: calc(100vw - 120px);
+  }
+
+  .att-card {
+    max-width: calc(100vw - 80px);
+  }
+
+  .input-row {
+    grid-template-columns: 36px 1fr 36px;
+  }
+
+  .attach-btn,
+  .send-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    padding: 10px !important;
+  }
+
+  .input-field {
+    min-height: 36px;
+    font-size: 16px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* ACCESSIBILITY */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.attach-btn:focus-visible,
+.send-btn:focus-visible,
+.chip-remove:focus-visible {
+  outline: 2px solid #7a9870;
+  outline-offset: 2px;
+}
+
+.input-field:focus-visible {
+  outline: 2px solid #7a9870;
+  outline-offset: -2px;
+}

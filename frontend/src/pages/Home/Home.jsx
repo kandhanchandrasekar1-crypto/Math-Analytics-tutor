@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import "./Home.css";
+import "./Attachment.css";
 
 const SUGGESTIONS = [
   "Solve 2x² + 5x − 3 = 0",
@@ -76,6 +77,84 @@ function IconPlus() {
   );
 }
 
+/* ── File size formatter ── */
+function fmtSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/* ── File icon (PDF vs image vs generic) ── */
+function FileTypeIcon({ mime }) {
+  if (mime === "application/pdf") return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="2" y="1" width="12" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+      <path d="M10 1v4h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+      <text x="5" y="14" fontSize="4.5" fontFamily="sans-serif" fill="currentColor" fontWeight="bold">PDF</text>
+    </svg>
+  );
+  if (mime?.startsWith("image/")) return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="1.5" y="1.5" width="17" height="17" rx="2" stroke="currentColor" strokeWidth="1.4"/>
+      <circle cx="6.5" cy="6.5" r="1.5" fill="currentColor"/>
+      <path d="M1.5 13.5l4.5-4.5 3 3 2.5-2.5 5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="2" y="1" width="12" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+      <path d="M10 1v4h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+      <line x1="5" y1="10" x2="11" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+      <line x1="5" y1="12.5" x2="9" y2="12.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+/* ── Single attachment card ── */
+function AttachmentCard({ att }) {
+  const isPdf   = att.type === "application/pdf";
+  const isImage = att.type?.startsWith("image/");
+
+  const statusIcon = {
+    uploading: (
+      <span className="att-status att-status--uploading" aria-label="Uploading">
+        <span className="att-spinner" />
+        <span>Uploading…</span>
+      </span>
+    ),
+    ready: (
+      <span className="att-status att-status--ready" aria-label="Ready">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+          <path d="M2 5.5l2.5 2.5L9 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <span>Ready</span>
+      </span>
+    ),
+    failed: (
+      <span className="att-status att-status--failed" aria-label="Upload failed">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+          <line x1="2" y1="2" x2="9" y2="9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+          <line x1="9" y1="2" x2="2" y2="9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+        </svg>
+        <span>Failed</span>
+      </span>
+    ),
+  }[att.status] ?? null;
+
+  return (
+    <div className={`att-card att-card--${att.status}`}>
+      <span className="att-icon">
+        <FileTypeIcon mime={att.type} />
+      </span>
+      <div className="att-info">
+        <span className="att-name" title={att.name}>{att.name}</span>
+        <span className="att-meta">{fmtSize(att.size)}</span>
+      </div>
+      {statusIcon}
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════ */
 export default function Home({ onNavigate }) {
   const token   = localStorage.getItem("token");
@@ -84,7 +163,9 @@ export default function Home({ onNavigate }) {
 
   /* ── Fetch real user info from /me endpoint ── */
   const [userInfo, setUserInfo] = useState(() => {
-    // Try cached user info first so name appears instantly
+    // Only seed from cache if it belongs to THIS user's decoded token
+    // This prevents a previous user's cached name from flashing on screen
+    if (!userId || userId === "guest") return null;
     try { return JSON.parse(localStorage.getItem(`user_info_${userId}`) || "null"); }
     catch { return null; }
   });
@@ -113,7 +194,16 @@ export default function Home({ onNavigate }) {
   const avatarImg     = localStorage.getItem("math_tutor_avatar") || "";
   const displayName   = savedProfile?.displayName || realUsername || "You";
   const avatarColor   = savedProfile?.avatarColor || "#7a9870";
-  const initials      = displayName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) || "?";
+  // Compute initials safely:
+  // - If displayName looks like an email, use first letter of the local part only
+  // - Otherwise take the first letter of each space-separated word (max 2)
+  const initials = (() => {
+    if (!displayName || displayName === "You") return "?";
+    const name = displayName.includes("@") ? displayName.split("@")[0] : displayName;
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  })();
 
   // Save fetched info so Profile page can read it
   useEffect(() => {
@@ -142,6 +232,13 @@ export default function Home({ onNavigate }) {
   const [question,      setQuestion]      = useState("");
   const [messages,      setMessages]      = useState([]);
   const [loading,       setLoading]       = useState(false);
+  const [documents, setDocuments] = useState([]);
+  const [uploading, setUploading] = useState(false);
+
+  // Each entry: { id, name, size, type, status: "uploading"|"ready"|"failed" }
+  const [pendingAttachments, setPendingAttachments] = useState([]);
+
+  const fileInputRef = useRef(null);
   const [showHistory,   setShowHistory]   = useState(false);
   const [history,       setHistory]       = useState(() => loadHistory(userId));
   const [logoutConfirm, setLogoutConfirm] = useState(false);
@@ -153,6 +250,12 @@ export default function Home({ onNavigate }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    if (token) {
+      fetchDocuments();
+    }
+  }, [token]);
 
   const autoResize = () => {
     const el = textareaRef.current;
@@ -168,27 +271,70 @@ export default function Home({ onNavigate }) {
   /* ── Send message ── */
   const handleSend = async (text) => {
     const q = (text ?? question).trim();
-    if (!q) return;
+    
+    // Allow sending if there's text OR pending attachments
+    if (!q && pendingAttachments.length === 0) return;
 
-    setMessages(prev => [...prev, { role: "user", content: q }]);
+    // Check if token exists
+    if (!token) {
+      setMessages(prev => [
+        ...prev,
+        { role: "bot", content: "Error: Not authenticated. Please log in again." },
+      ]);
+      return;
+    }
+
+    // DEBUG: Log token
+    console.log("🔐 Token being sent:", token.substring(0, 30) + "...");
+    console.log("🔐 Full Authorization header: Bearer " + token.substring(0, 30) + "...");
+
+    // Build the user message
+    let userMessage = {};
+    
+    if (pendingAttachments.length > 0) {
+      // Has attachments: create combined message
+      userMessage = {
+        role: "user",
+        type: "attachments_and_text",
+        attachments: pendingAttachments,
+        content: q || "", // text can be empty if only attachments
+      };
+    } else {
+      // No attachments: just text
+      userMessage = { role: "user", content: q };
+    }
+
+    setMessages(prev => [...prev, userMessage]);
     setQuestion("");
+    setPendingAttachments([]); // Clear pending attachments after sending
     setLoading(true);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
 
     try {
+      console.log("📤 Sending request to /ask with token...");
+      
       const response = await fetch("http://127.0.0.1:8000/ask", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ question: q }),
       });
 
+      console.log("📥 Response status:", response.status);
+
+      // Check if response is ok
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.detail || `Server error: ${response.status}`;
+        console.error("❌ Backend error:", errorMsg);
+        throw new Error(errorMsg);
+      }
+
       const data = await response.json();
 
       // Handle different possible response shapes from backend
-      // Try: data.answer, data.response, data.message, data.content, or the full string
       const botAnswer =
         data?.answer   ||
         data?.response ||
@@ -221,10 +367,12 @@ export default function Home({ onNavigate }) {
         return updated;
       });
 
-    } catch {
+    } catch (error) {
+      console.error("❌ Error sending message:", error);
+      const errorMessage = error.message || "Error connecting to backend. Make sure it is running on port 8000.";
       setMessages(prev => [
         ...prev,
-        { role: "bot", content: "Error connecting to backend. Make sure it is running on port 8000." },
+        { role: "bot", content: `Error: ${errorMessage}` },
       ]);
     } finally {
       setLoading(false);
@@ -251,7 +399,112 @@ export default function Home({ onNavigate }) {
     setQuestion("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
-  const handleLogout = () => { localStorage.removeItem("token"); window.location.reload(); };
+  const handleLogout = () => {
+    // Clear the token
+    localStorage.removeItem("token");
+
+    // Clear the shared profile/avatar keys so the next user starts clean
+    localStorage.removeItem("math_tutor_profile");
+    localStorage.removeItem("math_tutor_avatar");
+
+    // Clear this user's cached userInfo so stale display name never bleeds through
+    if (userId && userId !== "guest") {
+      localStorage.removeItem(`user_info_${userId}`);
+    }
+
+    window.location.reload();
+  };
+
+  const fetchDocuments = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/upload", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      setDocuments(data.documents || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    // Check if token exists
+    if (!token) {
+      alert("Error: Not authenticated. Please log in again.");
+      return;
+    }
+
+    // DEBUG: Log token
+    console.log("🔐 File upload - Token:", token.substring(0, 30) + "...");
+
+    // 1. Build attachment objects with unique IDs and store as PENDING (not in chat yet)
+    const attachments = files.map(file => ({
+      id:     `att_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      name:   file.name,
+      size:   file.size,
+      type:   file.type,
+      status: "uploading",
+    }));
+
+    // Add to pending attachments (display as chips above textarea)
+    setPendingAttachments(prev => [...prev, ...attachments]);
+    setUploading(true);
+
+    // 2. Upload to backend
+    const formData = new FormData();
+    files.forEach(file => formData.append("files", file));
+
+    let uploadOk = false;
+    try {
+      console.log("📤 Uploading files with token...");
+      
+      const response = await fetch("http://127.0.0.1:8000/upload", {
+        method: "POST",
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      console.log("📥 Upload response status:", response.status);
+
+      // Check if response is ok
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.detail || `Upload failed: ${response.status}`;
+        console.error("❌ Upload error:", errorMsg);
+        uploadOk = false;
+      } else {
+        uploadOk = true;
+        const data = await response.json();
+        if (data.documents) {
+          setDocuments(data.documents);
+        }
+      }
+    } catch (err) {
+      console.error("❌ Upload Error:", err);
+      uploadOk = false;
+    }
+
+    // 3. Update the status of pending attachments
+    const finalStatus = uploadOk ? "ready" : "failed";
+    setPendingAttachments(prev =>
+      prev.map(a =>
+        attachments.some(att => att.id === a.id)
+          ? { ...a, status: finalStatus }
+          : a
+      )
+    );
+
+    setUploading(false);
+    e.target.value = "";
+  };
 
   return (
     <div className="layout">
@@ -390,17 +643,49 @@ export default function Home({ onNavigate }) {
             </div>
           ) : (
             <div className="messages">
-              {messages.map((msg, i) => (
-                <div key={i} className={`message message--${msg.role}`}>
-                  {msg.role === "bot" && (
-                    <span className="msg-avatar"><SigmaIcon size={22} /></span>
-                  )}
-                  <div className="msg-bubble">{msg.content}</div>
-                  {msg.role === "user" && (
-                    <span className="msg-avatar msg-avatar--user">{initials}</span>
-                  )}
-                </div>
-              ))}
+              {messages.map((msg, i) => {
+                /* ── Attachment + text message ── */
+                if (msg.type === "attachments_and_text") {
+                  return (
+                    <div key={i} className="message message--user message--attachments-text">
+                      <div className="attachment-cards">
+                        {msg.attachments.map(att => (
+                          <AttachmentCard key={att.id} att={att} />
+                        ))}
+                      </div>
+                      {msg.content && (
+                        <div className="msg-bubble">{msg.content}</div>
+                      )}
+                      <span className="msg-avatar msg-avatar--user">{initials}</span>
+                    </div>
+                  );
+                }
+                /* ── Attachment-only message (legacy) ── */
+                if (msg.type === "attachments") {
+                  return (
+                    <div key={i} className="message message--user message--attachments">
+                      <div className="attachment-cards">
+                        {msg.attachments.map(att => (
+                          <AttachmentCard key={att.id} att={att} />
+                        ))}
+                      </div>
+                      <span className="msg-avatar msg-avatar--user">{initials}</span>
+                    </div>
+                  );
+                }
+                /* ── Normal text message ── */
+                return (
+                  <div key={i} className={`message message--${msg.role}`}>
+                    {msg.role === "bot" && (
+                      <span className="msg-avatar"><SigmaIcon size={22} /></span>
+                    )}
+                    <div className="msg-bubble">{msg.content}</div>
+                    {msg.role === "user" && (
+                      <span className="msg-avatar msg-avatar--user">{initials}</span>
+                    )}
+                  </div>
+                );
+              })}
               {loading && (
                 <div className="message message--bot">
                   <span className="msg-avatar"><SigmaIcon size={22} /></span>
@@ -415,6 +700,49 @@ export default function Home({ onNavigate }) {
         </div>
 
         <div className="input-row">
+
+          {/* ── Pending attachments staging area ── */}
+          {pendingAttachments.length > 0 && (
+            <div className="pending-attachments">
+              {pendingAttachments.map(att => (
+                <div key={att.id} className="pending-attachment-chip">
+                  <div className="chip-content">
+                    <FileTypeIcon mime={att.type} />
+                    <span className="chip-name" title={att.name}>{att.name}</span>
+                  </div>
+                  <button
+                    className="chip-remove"
+                    onClick={() => setPendingAttachments(prev =>
+                      prev.filter(a => a.id !== att.id)
+                    )}
+                    aria-label="Remove"
+                  >
+                    <IconClose />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.png,.jpg,.jpeg,.txt"
+            style={{ display: "none" }}
+            onChange={handleFileUpload}
+          />
+
+          {/* Controls Row: Button + Textarea + Send */}
+          <button
+            className="attach-btn"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            aria-label="Upload files"
+          >
+            {uploading ? "..." : <IconPlus />}
+          </button>
           <textarea
             ref={textareaRef}
             className="input-field"
@@ -425,7 +753,7 @@ export default function Home({ onNavigate }) {
             onKeyDown={handleKeyDown}
           />
           <button className="send-btn" onClick={() => handleSend()}
-            disabled={!question.trim() || loading} aria-label="Send">
+            disabled={(!question.trim() && pendingAttachments.length === 0) || loading} aria-label="Send">
             <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
               <path d="M2 9L16 2L9 16L8 10L2 9Z" stroke="currentColor"
                 strokeWidth="1.6" strokeLinejoin="round"/>

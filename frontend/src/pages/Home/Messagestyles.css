@@ -1,0 +1,82 @@
+/* ─────────────────────────────────────────────────────── */
+/* Combined Attachments + Text Message                      */
+/* ─────────────────────────────────────────────────────── */
+
+.message--attachments-text {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.message--attachments-text .attachment-cards {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.message--attachments-text .msg-bubble {
+  flex: 1;
+  min-width: 0;
+}
+
+/* When there's both attachments and text, stack them vertically */
+.message--attachments-text > .msg-bubble {
+  margin-top: 8px;
+}
+
+.message--attachments-text .msg-avatar {
+  align-self: flex-end;
+}
+
+/* ─────────────────────────────────────────────────────── */
+/* Input Row - Proper Flex Layout                          */
+/* ─────────────────────────────────────────────────────── */
+
+.input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background: white;
+  border-top: 1px solid #e5e1d8;
+}
+
+/* When pending attachments exist, show them */
+.input-row .pending-attachments {
+  display: flex;
+}
+
+/* Control row (button + textarea + send button) */
+.input-row > :not(.pending-attachments) {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 12px;
+  background: white;
+}
+
+/* Textarea takes remaining space */
+.input-row .input-field {
+  flex: 1;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Buttons have fixed sizes */
+.input-row .attach-btn,
+.input-row .send-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Hidden file input */
+.input-row input[type="file"] {
+  display: none !important;
+}
